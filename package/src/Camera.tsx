@@ -392,6 +392,23 @@ export class Camera extends React.PureComponent<CameraProps, CameraState> {
   }
   //#endregion
 
+  
+  public async lockFocusAndExposureToPoint(point: Point): Promise<boolean> {
+    try {
+      return await CameraModule.lockFocusAndExposureToPoint(this.handle, point)
+    } catch (e) {
+      throw tryParseNativeCameraError(e);
+    }
+  }
+
+  public async freeFocusAndExposure(): Promise<void> {
+    try {
+      return await CameraModule.freeFocusAndExposure(this.handle)
+    } catch (e) {
+      throw tryParseNativeCameraError(e);
+    }
+  }
+
   //#region Static Functions (NativeModule)
   /**
    * Get a list of all available camera devices on the current phone.
