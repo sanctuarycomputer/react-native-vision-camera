@@ -23,6 +23,10 @@ import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.core.internal.compat.workaround.ExifRotationAvailability
 import android.media.MediaActionSound
 import androidx.exifinterface.media.ExifInterface
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 fun isOnMainThread() = Looper.myLooper() == Looper.getMainLooper()
 fun ensureBackgroundThread(callback: () -> Unit) {
@@ -37,7 +41,8 @@ fun ensureBackgroundThread(callback: () -> Unit) {
 
 val TAG = "CameraSession+Photo"
 
-suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo {
+@OptIn(ExperimentalCoroutinesApi::class)
+suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendCancellableCoroutine { continuation ->
 
   photosBeingProcessed++
 
@@ -135,22 +140,29 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo {
             e.printStackTrace()
           }
           photosBeingProcessed--
+
+          if (continuation.isActive) {
+            continuation.resume(
+              Photo(
+                "/storage/emulated/0/Pictures/Light/${filename}",
+                0,
+                0,
+                Orientation.fromSurfaceRotation(photoOutput.targetRotation),
+                isMirrored
+              )
+            )
+          }
         }
       }
     }
     override fun onError(exception: ImageCaptureException) {
       photosBeingProcessed--
       Log.d(TAG, "onError: ${exception.message}")
+      if (continuation.isActive) {
+        continuation.resumeWithException(exception)
+      }
     }
   })
-
-  return Photo(
-    "/storage/emulated/0/Pictures/Light/${filename}",
-    0,
-    0,
-    Orientation.fromSurfaceRotation(photoOutput.targetRotation),
-    isMirrored
-  )
 }
 
 private val AudioManager.isSilent: Boolean
