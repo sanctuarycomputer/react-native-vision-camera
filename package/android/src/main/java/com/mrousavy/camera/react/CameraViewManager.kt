@@ -186,6 +186,15 @@ class CameraViewManager : ViewGroupManager<CameraView>() {
     }
   }
 
+  @ReactProp(name = "jpegCompressionQuality")
+  fun setJpegCompressionQuality(view: CameraView, jpegCompressionQuality: Int?) {
+    if (jpegCompressionQuality != null && jpegCompressionQuality >= 0 && jpegCompressionQuality <= 100) {
+      view.jpegCompressionQuality = jpegCompressionQuality
+    } else {
+      view.jpegCompressionQuality = 100
+    }
+  }
+
   @ReactProp(name = "videoHdr")
   fun setVideoHdr(view: CameraView, videoHdr: Boolean) {
     view.videoHdr = videoHdr
