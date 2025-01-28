@@ -45,7 +45,7 @@ fun removeStubFile(file: File) {
   }
 }
 fun broadcastImageProcessingCompleteIntent(context: Context, file: File) {
-  val intent = Intent("asdf")
+  val intent = Intent("com.mrousavy.camera.PHOTO_PROCESSED")
   intent.putExtra("filename", file.absolutePath)
   context.sendBroadcast(intent)
 }
