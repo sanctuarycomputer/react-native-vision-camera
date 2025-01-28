@@ -78,6 +78,7 @@ class CameraView(context: Context) :
 
   // TODO: Use .BALANCED once CameraX fixes it https://issuetracker.google.com/issues/337214687
   var photoQualityBalance = QualityBalance.SPEED
+  var jpegCompressionQuality = 100
   var lowLightBoost = false
 
   // other props
@@ -173,7 +174,7 @@ class CameraView(context: Context) :
 
         // Photo
         if (photo) {
-          config.photo = CameraConfiguration.Output.Enabled.create(CameraConfiguration.Photo(isMirrored, photoHdr, photoQualityBalance))
+          config.photo = CameraConfiguration.Output.Enabled.create(CameraConfiguration.Photo(isMirrored, photoHdr, photoQualityBalance, jpegCompressionQuality))
         } else {
           config.photo = CameraConfiguration.Output.Disabled.create()
         }
