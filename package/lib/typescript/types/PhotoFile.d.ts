@@ -43,10 +43,10 @@ export interface TakePhotoOptions {
     useFastMode?: boolean;
     /**
      * For LP3, this option will resolve the promise on the onCaptureStart callback instead of when the photo finishes processing
-     * 
+     *
      * @default false
-     */
-    resolveOnCaptureStarted?: boolean
+    */
+    resolveOnCaptureStarted?: boolean;
 }
 /**
  * Represents a Photo taken by the Camera written to the local filesystem.
