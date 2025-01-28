@@ -201,6 +201,14 @@ export interface CameraProps extends ViewProps {
      */
     photoQualityBalance?: 'speed' | 'balanced' | 'quality';
     /**
+     * LightOS: Configures the compression quality of saved images.
+     * Accepts values of 0-100
+     * See docs:
+     * https://developer.android.com/reference/androidx/camera/core/ImageCapture.Builder#setJpegQuality(int)
+     * @default 100
+     */
+    jpegCompressionQuality?: number;
+    /**
      * Enables or disables lossy buffer compression for the video stream.
      * If you only use {@linkcode video} or a {@linkcode frameProcessor}, this
      * can increase the efficiency and lower memory usage of the Camera.
