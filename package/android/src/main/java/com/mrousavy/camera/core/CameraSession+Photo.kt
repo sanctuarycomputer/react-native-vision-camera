@@ -27,6 +27,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.random.Random
 
 fun isOnMainThread() = Looper.myLooper() == Looper.getMainLooper()
 fun ensureBackgroundThread(callback: () -> Unit) {
@@ -52,7 +53,6 @@ fun broadcastImageProcessingCompleteIntent(context: Context, file: File) {
 
 val TAG = "CameraSession+Photo"
 
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendCancellableCoroutine { continuation ->
 
   photosBeingProcessed++
@@ -76,6 +76,8 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
     isReversedHorizontal = isMirrored
   }
 
+  val startTime = System.currentTimeMillis()
+  var profilerOutput = ""
   Log.i(LP3_TAG, "starting take")
 
   val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Light")
@@ -100,6 +102,7 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
   photoOutput.takePicture(CameraQueues.cameraExecutor, object : OnImageCapturedCallback() {
     override fun onCaptureStarted() {
       Log.i(LP3_TAG, "onCaptureStarted called")
+      profilerOutput += "${(System.currentTimeMillis() - startTime)/1000.0}, "
 
       // We need to wait for this callback before unlocking the focus lock
       // Otherwise we risk the camera having time to refocus before shooting
@@ -132,6 +135,7 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
     @SuppressLint("RestrictedApi")
     override fun onCaptureSuccess(image: ImageProxy) {
       Log.i(LP3_TAG, "onCaptureSuccess called")
+      profilerOutput += "${(System.currentTimeMillis() - startTime)/1000.0}, "
       ensureBackgroundThread {
         image.use {
           if (enableShutterSound) {
@@ -170,6 +174,10 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
 
           broadcastImageProcessingCompleteIntent(context, outputFile)
           photosBeingProcessed--
+
+          profilerOutput += "${(System.currentTimeMillis() - startTime)/1000.0}, "
+          // output will be timings of onCaptureStarted, onCaptureSuccess, processing completion
+          Log.i("LP3_PROFILER", profilerOutput)
 
           if (!options.resolveOnCaptureStarted && continuation.isActive) {
             // resolve the promise
