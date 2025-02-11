@@ -350,6 +350,8 @@ internal fun CameraSession.configureSideProps(config: CameraConfiguration) {
   // Exposure
   val currentExposureCompensation = camera.cameraInfo.exposureState.exposureCompensationIndex
   val exposureCompensation = config.exposure?.roundToInt() ?: 0
+  Log.i("LP3_EXP", "adjusting exposure $currentExposureCompensation - $exposureCompensation")
+  Log.i("LP3_EXP", "minmax ${camera.cameraInfo.exposureState.exposureCompensationRange.lower} - ${camera.cameraInfo.exposureState.exposureCompensationRange.upper}")
   if (currentExposureCompensation != exposureCompensation) {
     camera.cameraControl.setExposureCompensationIndex(exposureCompensation)
   }

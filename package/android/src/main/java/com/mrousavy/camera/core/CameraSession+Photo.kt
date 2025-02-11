@@ -28,6 +28,8 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.random.Random
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
 
 fun isOnMainThread() = Looper.myLooper() == Looper.getMainLooper()
 fun ensureBackgroundThread(callback: () -> Unit) {
@@ -80,7 +82,7 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
   var profilerOutput = ""
   Log.i(LP3_TAG, "starting take")
 
-  val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Light")
+  val directory = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Light-test")
   if (!directory.exists()) {
     directory.mkdirs()
   }
@@ -97,6 +99,41 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
   )
   Log.i(LP3_TAG, "stub file created")
 
+  Log.i(LP3_TAG, "camera.cameraInfo.cameraState ${camera.cameraInfo.cameraState}");
+  Log.i(LP3_TAG, "camera.cameraInfo.cameraState.value ${camera.cameraInfo.cameraState.value}");
+
+  Log.i(LP3_TAG, "camera.cameraInfo.exposureState ${camera.cameraInfo.exposureState}");
+  Log.i(LP3_TAG, "camera.cameraInfo.exposureState.exposureCompensationRange ${camera.cameraInfo.exposureState.exposureCompensationRange}");
+  Log.i(LP3_TAG, "camera.cameraInfo.exposureState.exposureCompensationIndex ${camera.cameraInfo.exposureState.exposureCompensationIndex}");
+  Log.i(LP3_TAG, "camera.cameraInfo.exposureState.exposureCompensationStep ${camera.cameraInfo.exposureState.exposureCompensationStep}");
+  Log.i(LP3_TAG, "camera.cameraInfo.exposureState.isExposureCompensationSupported ${camera.cameraInfo.exposureState.isExposureCompensationSupported}");
+
+  Log.i(LP3_TAG, "camera.cameraInfo.zoomState ${camera.cameraInfo.zoomState}");
+  Log.i(LP3_TAG, "camera.cameraInfo.torchState ${camera.cameraInfo.torchState}");
+  Log.i(LP3_TAG, "camera.cameraInfo.cameraSelector ${camera.cameraInfo.cameraSelector}");
+  Log.i(LP3_TAG, "camera.cameraInfo.implementationType ${camera.cameraInfo.implementationType}");
+  Log.i(LP3_TAG, "camera.cameraInfo.intrinsicZoomRatio ${camera.cameraInfo.intrinsicZoomRatio}");
+  Log.i(LP3_TAG, "camera.cameraInfo.isLogicalMultiCameraSupported ${camera.cameraInfo.isLogicalMultiCameraSupported}");
+  Log.i(LP3_TAG, "camera.cameraInfo.isPrivateReprocessingSupported ${camera.cameraInfo.isPrivateReprocessingSupported}");
+  Log.i(LP3_TAG, "camera.cameraInfo.isZslSupported ${camera.cameraInfo.isZslSupported}");
+  Log.i(LP3_TAG, "camera.cameraInfo.lensFacing ${camera.cameraInfo.lensFacing}");
+  Log.i(LP3_TAG, "camera.cameraInfo.physicalCameraInfos ${camera.cameraInfo.physicalCameraInfos}");
+  Log.i(LP3_TAG, "camera.cameraInfo.supportedFrameRateRanges ${camera.cameraInfo.supportedFrameRateRanges}");
+
+  val cameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
+  val characteristics = configuration.cameraId?.let { cameraManager.getCameraCharacteristics(it) }
+
+  val hardwareLevel = characteristics?.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL)
+  val halVersion = when (hardwareLevel) {
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LEGACY -> "LEGACY"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_LIMITED -> "LIMITED"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_FULL -> "FULL"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3 -> "LEVEL_3"
+    CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_EXTERNAL -> "EXTERNAL"
+    else -> "UNKNOWN"
+  }
+
+  Log.i(LP3_TAG, "Camera HAL version: $halVersion")
 
 
   photoOutput.takePicture(CameraQueues.cameraExecutor, object : OnImageCapturedCallback() {
@@ -116,7 +153,7 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
         put(MediaStore.Images.Media.DATE_TAKEN, capturedAt)
         put(MediaStore.Images.Media.DATA, outputFile.absolutePath)
       }
-      context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+      //context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
 
       if (options.resolveOnCaptureStarted && continuation.isActive) {
         // resolve the promise

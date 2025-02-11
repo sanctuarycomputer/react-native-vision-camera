@@ -6,6 +6,7 @@ import type { PinchGestureHandlerGestureEvent } from 'react-native-gesture-handl
 import { PinchGestureHandler, TapGestureHandler } from 'react-native-gesture-handler'
 import type { CameraProps, CameraRuntimeError, PhotoFile, VideoFile } from 'react-native-vision-camera'
 import {
+  getCameraFormat,
   runAtTargetFps,
   useCameraDevice,
   useCameraFormat,
@@ -69,6 +70,8 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
 
   const [targetFps, setTargetFps] = useState(60)
 
+  const [exposure, setExposure] = useState(0);
+
   const screenAspectRatio = SCREEN_HEIGHT / SCREEN_WIDTH
   const format = useCameraFormat(device, [
     { fps: targetFps },
@@ -76,6 +79,9 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
     { videoResolution: 'max' },
     { photoAspectRatio: screenAspectRatio },
     { photoResolution: 'max' },
+  ])
+  const format2 = getCameraFormat(device!, [
+    { photoResolution: {width: 4000, height: 3000}}
   ])
 
   const fps = Math.min(format?.maxFps ?? 1, targetFps)
@@ -111,16 +117,16 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
     console.log('Camera initialized!')
     setIsCameraInitialized(true)
   }, [])
-  const onMediaCaptured = useCallback(
+  /*const onMediaCaptured = useCallback(
     (media: PhotoFile | VideoFile, type: 'photo' | 'video') => {
       console.log(`Media captured! ${JSON.stringify(media)}`)
-      navigation.navigate('MediaPage', {
-        path: media.path,
-        type: type,
-      })
+      //navigation.navigate('MediaPage', {
+      //  path: media.path,
+      //  type: type,
+      //})
     },
     [navigation],
-  )
+  )*/
   const onFlipCameraPressed = useCallback(() => {
     setCameraPosition((p) => (p === 'back' ? 'front' : 'back'))
   }, [])
@@ -196,7 +202,7 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
 
     runAtTargetFps(10, () => {
       'worklet'
-      console.log(`${frame.timestamp}: ${frame.width}x${frame.height} ${frame.pixelFormat} Frame (${frame.orientation})`)
+      //console.log(`${frame.timestamp}: ${frame.width}x${frame.height} ${frame.pixelFormat} Frame (${frame.orientation})`)
       examplePlugin(frame)
       exampleKotlinSwiftPlugin(frame)
     })
@@ -204,6 +210,18 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
 
   const videoHdr = format?.supportsVideoHdr && enableHdr
   const photoHdr = format?.supportsPhotoHdr && enableHdr && !videoHdr
+
+  console.log("photo hdr", photoHdr);
+
+  const lowerExposure = () => {
+    console.log(exposure);
+    setExposure(exposure - 1);
+  }
+  const raiseExposure = () => {
+    console.log(exposure);
+    setExposure(exposure + 1);
+  }
+
 
   return (
     <View style={styles.container}>
@@ -225,15 +243,16 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
                 onOutputOrientationChanged={(o) => console.log(`Output orientation changed to ${o}!`)}
                 onPreviewOrientationChanged={(o) => console.log(`Preview orientation changed to ${o}!`)}
                 onUIRotationChanged={(degrees) => console.log(`UI Rotation changed: ${degrees}°`)}
-                format={format}
+                format={format2}
                 fps={fps}
                 photoHdr={photoHdr}
                 videoHdr={videoHdr}
                 photoQualityBalance="quality"
+                jpegCompressionQuality={100}
                 lowLightBoost={device.supportsLowLightBoost && enableNightMode}
                 enableZoomGesture={false}
                 animatedProps={cameraAnimatedProps}
-                exposure={0}
+                exposure={exposure}
                 enableFpsGraph={true}
                 outputOrientation="device"
                 photo={true}
@@ -254,7 +273,7 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
       <CaptureButton
         style={styles.captureButton}
         camera={camera}
-        onMediaCaptured={onMediaCaptured}
+        onMediaCaptured={() => {}} //onMediaCaptured}
         cameraZoom={zoom}
         minZoom={minZoom}
         maxZoom={maxZoom}
@@ -296,11 +315,20 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
         <PressableOpacity style={styles.button} onPress={() => navigation.navigate('CodeScannerPage')}>
           <IonIcon name="qr-code-outline" color="white" size={24} />
         </PressableOpacity>
+        {/*
         <PressableOpacity style={styles.button} onPress={() => lockFocus()}>
           <IonIcon name="settings-outline" color="white" size={12} />
         </PressableOpacity>
         <PressableOpacity style={styles.button} onPress={() => unlockFocus()}>
           <IonIcon name="settings-outline" color="white" size={12} />
+        </PressableOpacity>
+        */}
+
+        <PressableOpacity style={styles.button} onPress={lowerExposure} disabledOpacity={0.4}>
+          <IonIcon name='moon-outline' color="white" size={24} />
+        </PressableOpacity>
+          <PressableOpacity style={styles.button} onPress={raiseExposure} disabledOpacity={0.4}>
+          <IonIcon name='moon' color="white" size={24} />
         </PressableOpacity>
       </View>
     </View>

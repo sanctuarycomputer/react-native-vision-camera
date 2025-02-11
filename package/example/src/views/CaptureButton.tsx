@@ -66,8 +66,10 @@ const _CaptureButton: React.FC<Props> = ({
         flash: flash,
         enableShutterSound: false,
         useFastMode: useFastMode,
+        resolveOnCaptureStarted: false,
       })
-      onMediaCaptured(photo, 'photo')
+      console.log("photo taken")
+      //onMediaCaptured(photo, 'photo')
     } catch (e) {
       console.error('Failed to take photo!', e)
     }
