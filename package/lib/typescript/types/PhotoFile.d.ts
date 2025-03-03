@@ -41,6 +41,12 @@ export interface TakePhotoOptions {
      * For LP3, this option should reduce shutter speed and prevent much refocusing when taking a photo in locked focus mode
      */
     useFastMode?: boolean;
+    /**
+     * For LP3, this option will resolve the promise on the onCaptureStart callback instead of when the photo finishes processing
+     *
+     * @default false
+    */
+    resolveOnCaptureStarted?: boolean;
 }
 /**
  * Represents a Photo taken by the Camera written to the local filesystem.
