@@ -116,7 +116,10 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
         put(MediaStore.Images.Media.DATE_TAKEN, capturedAt)
         put(MediaStore.Images.Media.DATA, outputFile.absolutePath)
       }
-      context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+
+      // we want to return the contentUri so the frontend can handle it through the mediastore
+      val mediaUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+      returnVal.path = mediaUri.toString()
 
       if (options.resolveOnCaptureStarted && continuation.isActive) {
         // resolve the promise
