@@ -24,6 +24,8 @@ import com.mrousavy.camera.core.types.QualityBalance
 import com.mrousavy.camera.core.types.Torch
 import com.mrousavy.camera.core.types.VideoStabilizationMode
 import kotlin.math.roundToInt
+import androidx.camera.camera2.interop.Camera2Interop
+import android.hardware.camera2.CaptureRequest
 
 private fun assertFormatRequirement(
   propName: String,
@@ -92,6 +94,16 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration) 
   if (photoConfig != null) {
     Log.i(CameraSession.TAG, "Creating Photo output...")
     val photo = ImageCapture.Builder().also { photo ->
+      // Set exposure metering based on SnapdragonCamera
+      val camera2Extender = Camera2Interop.Extender(photo)
+      camera2Extender.setCaptureRequestOption(
+        CaptureRequest.Key<Integer>(
+          "org.codeaurora.qcamera3.exposure_metering.exposure_metering_mode",
+          Integer::class.java
+        ),
+        Integer(1)
+      )
+
       // Configure Photo Output
       photo.setCaptureMode(photoConfig.config.photoQualityBalance.toCaptureMode())
       Log.i("LP3_PROFILER", "Mode: ${photoConfig.config.photoQualityBalance}")
@@ -162,6 +174,16 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration) 
     }
 
     val video = VideoCapture.Builder(recorder).also { video ->
+      // Set exposure metering based on SnapdragonCamera
+      val camera2Extender = Camera2Interop.Extender(video)
+      camera2Extender.setCaptureRequestOption(
+        CaptureRequest.Key<Integer>(
+          "org.codeaurora.qcamera3.exposure_metering.exposure_metering_mode",
+          Integer::class.java
+        ),
+        Integer(1)
+      )
+
       // Configure Video Output
       if (videoConfig.config.isMirrored) {
         video.setMirrorMode(MirrorMode.MIRROR_MODE_ON)
