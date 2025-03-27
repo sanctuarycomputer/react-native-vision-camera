@@ -10,6 +10,11 @@ import androidx.camera.video.VideoRecordEvent
 import com.mrousavy.camera.core.extensions.getCameraError
 import com.mrousavy.camera.core.types.RecordVideoOptions
 import com.mrousavy.camera.core.types.Video
+import android.os.SystemProperties
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPersistentRecording::class)
 @SuppressLint("MissingPermission", "RestrictedApi")
@@ -22,6 +27,9 @@ fun CameraSession.startRecording(
   if (camera == null) throw CameraNotReadyError()
   if (recording != null) throw RecordingInProgressError()
   val videoOutput = videoOutput ?: throw VideoNotEnabledError()
+
+  // Force EIS to be in the right mode in case an edge case has left it at 2
+  toggleEIS("1");
 
   // Create output video file
   val outputOptions = FileOutputOptions.Builder(options.file.file).also { outputOptions ->
@@ -82,14 +90,32 @@ fun CameraSession.startRecording(
         val size = videoOutput.attachedSurfaceResolution ?: Size(0, 0)
         val video = Video(path, durationMs, size)
         callback(video)
+        val coroutineScope = CoroutineScope(Dispatchers.Main)
+        coroutineScope.launch {
+          // A small timeout is required or the camera freezes.
+          // Not sure on the minimum but 1/4s seems to work consistently
+          delay(250);
+          toggleEIS("1");
+        }
       }
     }
   }
 }
 
+fun CameraSession.toggleEIS(newMode: String) {
+  if (SystemProperties.get("persist.vendor.camera.enableEIS") == "0") {
+    Log.i(CameraSession.TAG, "not applying EIS change")
+    return;
+  }
+  Log.i(CameraSession.TAG, "EIS: changed from: " + SystemProperties.get("persist.vendor.camera.enableEIS"))
+  SystemProperties.set("persist.vendor.camera.enableEIS", newMode)
+  Log.i(CameraSession.TAG, "EIS: changed to: " + SystemProperties.get("persist.vendor.camera.enableEIS"))
+}
+
 fun CameraSession.stopRecording() {
   val recording = recording ?: throw NoRecordingInProgressError()
 
+  toggleEIS("2");
   recording.stop()
   this.recording = null
 }
