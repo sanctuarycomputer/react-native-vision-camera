@@ -78,6 +78,7 @@ fun CameraSession.startRecording(
           if (error.wasVideoRecorded) {
             Log.e(CameraSession.TAG, "Video Recorder encountered an error, but the video was recorded anyways.", error)
           } else {
+            restoreEndOfStream()
             Log.e(CameraSession.TAG, "Video Recorder encountered a fatal error!", error)
             onError(error)
             return@start
