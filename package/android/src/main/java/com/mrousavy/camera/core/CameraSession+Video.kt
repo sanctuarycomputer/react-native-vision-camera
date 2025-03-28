@@ -11,6 +11,7 @@ import com.mrousavy.camera.core.extensions.getCameraError
 import com.mrousavy.camera.core.types.RecordVideoOptions
 import com.mrousavy.camera.core.types.Video
 import android.os.SystemProperties
+import android.provider.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -29,7 +30,7 @@ fun CameraSession.startRecording(
   val videoOutput = videoOutput ?: throw VideoNotEnabledError()
 
   // Force EIS to be in the right mode in case an edge case has left it at 2
-  toggleEIS("1");
+  restoreEndOfStream()
 
   // Create output video file
   val outputOptions = FileOutputOptions.Builder(options.file.file).also { outputOptions ->
@@ -92,30 +93,21 @@ fun CameraSession.startRecording(
         callback(video)
         val coroutineScope = CoroutineScope(Dispatchers.Main)
         coroutineScope.launch {
+          Log.i(CameraSession.TAG, "starting delay")
           // A small timeout is required or the camera freezes.
           // Not sure on the minimum but 1/4s seems to work consistently
           delay(250);
-          toggleEIS("1");
+          restoreEndOfStream();
         }
       }
     }
   }
 }
 
-fun CameraSession.toggleEIS(newMode: String) {
-  if (SystemProperties.get("persist.vendor.camera.enableEIS") == "0") {
-    Log.i(CameraSession.TAG, "not applying EIS change")
-    return;
-  }
-  Log.i(CameraSession.TAG, "EIS: changed from: " + SystemProperties.get("persist.vendor.camera.enableEIS"))
-  SystemProperties.set("persist.vendor.camera.enableEIS", newMode)
-  Log.i(CameraSession.TAG, "EIS: changed to: " + SystemProperties.get("persist.vendor.camera.enableEIS"))
-}
-
 fun CameraSession.stopRecording() {
   val recording = recording ?: throw NoRecordingInProgressError()
 
-  toggleEIS("2");
+  startEndOfStream()
   recording.stop()
   this.recording = null
 }
@@ -133,4 +125,18 @@ fun CameraSession.pauseRecording() {
 fun CameraSession.resumeRecording() {
   val recording = recording ?: throw NoRecordingInProgressError()
   recording.resume()
+}
+
+fun CameraSession.startEndOfStream() {
+  setEISMode("2");
+}
+
+fun CameraSession.restoreEndOfStream() {
+  setEISMode(Settings.Global.getString(context.contentResolver, "enable_EIS"));
+}
+
+fun CameraSession.setEISMode(newMode: String) {
+  Log.i(CameraSession.TAG, "EIS: changed from: " + SystemProperties.get("persist.vendor.camera.enableEIS"));
+  SystemProperties.set("persist.vendor.camera.enableEIS", newMode);
+  Log.i(CameraSession.TAG, "EIS: changed to: " + SystemProperties.get("persist.vendor.camera.enableEIS"));
 }
