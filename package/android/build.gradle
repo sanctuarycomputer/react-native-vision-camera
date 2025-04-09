@@ -193,6 +193,9 @@ dependencies {
   // Some Coroutines extension functions
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
 
+  // Include light jar files
+  implementation files("../../../../framework_all/lp3.jar")
+
   if (enableCodeScanner) {
     // User enabled code-scanner, so we bundle the 2.4 MB model in the app.
     implementation 'com.google.mlkit:barcode-scanning:17.3.0'
