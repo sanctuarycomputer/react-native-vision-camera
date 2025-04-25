@@ -10,7 +10,6 @@ import androidx.camera.video.VideoRecordEvent
 import com.mrousavy.camera.core.extensions.getCameraError
 import com.mrousavy.camera.core.types.RecordVideoOptions
 import com.mrousavy.camera.core.types.Video
-import android.os.SystemProperties
 import android.provider.Settings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -134,15 +133,4 @@ fun CameraSession.startEndOfStream() {
 
 fun CameraSession.restoreEndOfStream() {
   setEISMode(Settings.Global.getString(context.contentResolver, "enable_EIS"));
-}
-
-fun CameraSession.setEISMode(newMode: String) {
-  try {
-    Log.i(CameraSession.TAG, "EIS: changed from: " + SystemProperties.get("persist.vendor.camera.enableEIS"));
-    SystemProperties.set("persist.vendor.camera.enableEIS", newMode);
-    Log.i(CameraSession.TAG, "EIS: changed to: " + SystemProperties.get("persist.vendor.camera.enableEIS"));
-  }
-  catch (e: Exception) {
-    Log.e(CameraSession.TAG, "Unable to set EIS mode ${e.message}")
-  }
 }
