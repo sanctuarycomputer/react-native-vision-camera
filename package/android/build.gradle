@@ -100,6 +100,16 @@ android {
     namespace "com.mrousavy.camera"
   }
 
+  flavorDimensions "version"
+  productFlavors {
+    "lp2" {
+      dimension "version"
+    }
+    "lp3" {
+      dimension "version"
+    }
+  }
+
   // Used to override the NDK path/version on internal CI or by allowing
   // users to customize the NDK path/version from their root project (e.g. for M1 support)
   if (rootProject.hasProperty("ndkPath")) {
@@ -194,7 +204,7 @@ dependencies {
   implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1"
 
   // Include light jar files
-  implementation files("../../../../framework_all/lp3.jar")
+  lp3Implementation files('../../../../framework_all/lp3.jar')
 
   if (enableCodeScanner) {
     // User enabled code-scanner, so we bundle the 2.4 MB model in the app.
@@ -243,5 +253,15 @@ tasks.configureEach { task ->
   // C++ clean
   if (task.name.contains("clean")) {
     task.dependsOn(deleteCmakeCache)
+  }
+}
+
+gradle.projectsEvaluated {
+  tasks.withType(JavaCompile) { task ->
+    def isLp3 = task.toString().indexOf("Lp3") != -1
+    if (!isLp3) {
+      return;
+    }
+    options.compilerArgs.add("-Xbootclasspath/p:${rootDir}/../../framework_all/lp3.jar")
   }
 }
