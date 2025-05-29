@@ -23,6 +23,7 @@ import androidx.camera.core.ImageCapture.Metadata
 import androidx.camera.core.internal.compat.workaround.ExifRotationAvailability
 import android.media.MediaActionSound
 import androidx.exifinterface.media.ExifInterface
+import com.mrousavy.camera.core.types.ShutterType
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
