@@ -121,6 +121,8 @@ suspend fun CameraSession.takePhoto(options: TakePhotoOptions): Photo = suspendC
       val mediaUri = context.contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
       returnVal.path = mediaUri.toString()
 
+      callback.onShutter(ShutterType.PHOTO)
+
       if (options.resolveOnCaptureStarted && continuation.isActive) {
         // resolve the promise
           continuation.resume(returnVal)
