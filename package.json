@@ -91,7 +91,7 @@
     "@release-it/conventional-changelog": "^8.0.1",
     "@shopify/react-native-skia": "^1.4.2",
     "@types/react": "^18.3.3",
-    "@types/react-native": "^0.73.0",
+    "@types/react-native": "0.73.0",
     "eslint": "^8.46.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -176,6 +176,10 @@
         }
       ]
     ]
+  },
+  "resolutions": {
+    "react-native": "^0.75.4",
+    "@types/react-native/react-native": "^0.75.4"
   },
   "packageManager": "yarn@1.22.19+sha1.4ba7fc5c6e704fce2066ecbfb0b0d8976fe62447"
 }
