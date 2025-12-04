@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const PACKAGE_DIR = path.join(__dirname, '..', 'package');
 const ROOT_DIR = path.join(__dirname, '..');
@@ -71,6 +72,35 @@ function preparePackage() {
       console.error(`Error copying ${item}:`, error.message);
       process.exit(1);
     }
+  }
+  
+  // Build the package to generate lib/ directory
+  // Note: prepare runs after dependencies are installed, so bob should be available
+  console.log('Building package...');
+  try {
+    // Try yarn first, then fall back to npm
+    try {
+      execSync('yarn build', {
+        cwd: ROOT_DIR,
+        stdio: 'inherit',
+        env: { ...process.env, NODE_ENV: 'production' }
+      });
+      console.log('✓ Build complete');
+    } catch (yarnError) {
+      // Fall back to npm if yarn fails
+      execSync('npm run build', {
+        cwd: ROOT_DIR,
+        stdio: 'inherit',
+        env: { ...process.env, NODE_ENV: 'production' }
+      });
+      console.log('✓ Build complete');
+    }
+  } catch (error) {
+    console.error('Error building package:', error.message);
+    console.warn('Warning: Build failed, but package may still work with source files');
+    console.warn('You may need to run "yarn build" or "npm run build" manually');
+    // Don't exit on build failure - the package might still work with source files
+    // via the "react-native" field in package.json
   }
   
   console.log('Package preparation complete!');
