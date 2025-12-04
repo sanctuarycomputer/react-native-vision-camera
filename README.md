@@ -1,3 +1,23 @@
+# LightOS fork for finer focus control
+
+To run the example app:
+
+```
+cd package
+yarn install
+cd example
+yarn install
+run android
+------
+run start
+```
+
+# Building a new release for LightOS
+
+We have a script in this repo so that the package builds after being installed - see `scripts/prepare-package.js`.
+
+After making changes to this repo, update the version in `package.json` and create a new tag - you can then update the tag in /LightOS/package.json
+
 <a href="https://margelo.com">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="./docs/static/img/banner-dark.png" />

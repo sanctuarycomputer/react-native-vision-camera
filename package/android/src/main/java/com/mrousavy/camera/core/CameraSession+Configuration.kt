@@ -20,9 +20,12 @@ import androidx.camera.video.VideoCapture
 import androidx.lifecycle.Lifecycle
 import com.mrousavy.camera.core.extensions.*
 import com.mrousavy.camera.core.types.CameraDeviceFormat
+import com.mrousavy.camera.core.types.QualityBalance
 import com.mrousavy.camera.core.types.Torch
 import com.mrousavy.camera.core.types.VideoStabilizationMode
 import kotlin.math.roundToInt
+import androidx.camera.camera2.interop.Camera2Interop
+import android.hardware.camera2.CaptureRequest
 
 private fun assertFormatRequirement(
   propName: String,
@@ -91,8 +94,22 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration) 
   if (photoConfig != null) {
     Log.i(CameraSession.TAG, "Creating Photo output...")
     val photo = ImageCapture.Builder().also { photo ->
+      // Set exposure metering based on SnapdragonCamera
+      val camera2Extender = Camera2Interop.Extender(photo)
+      camera2Extender.setCaptureRequestOption(
+        CaptureRequest.Key<Integer>(
+          "org.codeaurora.qcamera3.exposure_metering.exposure_metering_mode",
+          Integer::class.java
+        ),
+        Integer(1)
+      )
+
       // Configure Photo Output
       photo.setCaptureMode(photoConfig.config.photoQualityBalance.toCaptureMode())
+      Log.i("LP3_PROFILER", "Mode: ${photoConfig.config.photoQualityBalance}")
+      Log.i("LP3_PROFILER", "Quality: ${photoConfig.config.jpegCompressionQuality}")
+      Log.i(LP3_TAG, "Setting jpeg compression to ${photoConfig.config.jpegCompressionQuality}")
+      photo.setJpegQuality(photoConfig.config.jpegCompressionQuality)
       if (format != null) {
         Log.i(CameraSession.TAG, "Photo size: ${format.photoSize}")
         val resolutionSelector = ResolutionSelector.Builder()
@@ -106,6 +123,34 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration) 
   } else {
     photoOutput = null
   }
+
+  /*
+   * LP3: The aim with this was to provide a second Photo UseCase which would be used for when we lock the focus
+   * This use case is set to aim for fastest shutter speed
+   * Unfortunately, we can't bind two Photo UseCases at once and so this fails to initialize
+   * And if we don't bind it, photo taking fails
+   * Trying to dynamically rebind which UseCase is being used at runtime also seems to be full of pitfalls and complications
+   * Rebinding takes time and passing in the appropriate
+  // 2.1 Image Capture with Locked Focus
+  if (photoConfig != null) {
+    Log.i(CameraSession.TAG, "Creating Photo output...")
+    val photo = ImageCapture.Builder().also { photo ->
+      // Configure Photo Output
+      photo.setCaptureMode(QualityBalance.BALANCED.toCaptureMode())
+      if (format != null) {
+        Log.i(CameraSession.TAG, "Photo size: ${format.photoSize}")
+        val resolutionSelector = ResolutionSelector.Builder()
+          .forSize(format.photoSize)
+          .setAllowedResolutionMode(ResolutionSelector.PREFER_CAPTURE_RATE_OVER_HIGHER_RESOLUTION)
+          .build()
+        photo.setResolutionSelector(resolutionSelector)
+      }
+    }.build()
+    photoOutputLockedFocus = photo
+  } else {
+    photoOutputLockedFocus = null
+  }
+  */
 
   // 3. Video Capture
   if (videoConfig != null) {
@@ -129,6 +174,16 @@ internal fun CameraSession.configureOutputs(configuration: CameraConfiguration) 
     }
 
     val video = VideoCapture.Builder(recorder).also { video ->
+      // Set exposure metering based on SnapdragonCamera
+      val camera2Extender = Camera2Interop.Extender(video)
+      camera2Extender.setCaptureRequestOption(
+        CaptureRequest.Key<Integer>(
+          "org.codeaurora.qcamera3.exposure_metering.exposure_metering_mode",
+          Integer::class.java
+        ),
+        Integer(1)
+      )
+
       // Configure Video Output
       if (videoConfig.config.isMirrored) {
         video.setMirrorMode(MirrorMode.MIRROR_MODE_ON)
@@ -219,6 +274,7 @@ internal suspend fun CameraSession.configureCamera(provider: ProcessCameraProvid
   checkCameraPermission()
 
   // Outputs
+  // val useCases = listOfNotNull(previewOutput, photoOutput, photoOutputLockedFocus, videoOutput, frameProcessorOutput, codeScannerOutput)
   val useCases = listOfNotNull(previewOutput, photoOutput, videoOutput, frameProcessorOutput, codeScannerOutput)
   if (useCases.isEmpty()) {
     throw NoOutputsError()

@@ -51,6 +51,8 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
   const isForeground = useIsForeground()
   const isActive = isFocussed && isForeground
 
+  const useFastMode = useRef<boolean>(false)
+
   const [cameraPosition, setCameraPosition] = useState<'front' | 'back'>('back')
   const [enableHdr, setEnableHdr] = useState(false)
   const [flash, setFlash] = useState<'off' | 'on'>('off')
@@ -142,6 +144,17 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
     onFlipCameraPressed()
   }, [onFlipCameraPressed])
   //#endregion
+
+  const lockFocus = async () => {
+    const s = await camera.current!.lockFocusAndExposureToPoint({ x: SCREEN_WIDTH/2, y: SCREEN_HEIGHT/2 });
+    console.log("focus status: ", s);
+    useFastMode.current = true;
+  }
+
+  const unlockFocus = () => {
+    camera.current!.freeFocusAndExposure()
+    useFastMode.current = false;
+  }
 
   //#region Effects
   useEffect(() => {
@@ -248,6 +261,7 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
         flash={supportsFlash ? flash : 'off'}
         enabled={isCameraInitialized && isActive}
         setIsPressingButton={setIsPressingButton}
+        useFastMode={true}
       />
 
       <StatusBarBlurBackground />
@@ -281,6 +295,12 @@ export function CameraPage({ navigation }: Props): React.ReactElement {
         </PressableOpacity>
         <PressableOpacity style={styles.button} onPress={() => navigation.navigate('CodeScannerPage')}>
           <IonIcon name="qr-code-outline" color="white" size={24} />
+        </PressableOpacity>
+        <PressableOpacity style={styles.button} onPress={() => lockFocus()}>
+          <IonIcon name="settings-outline" color="white" size={12} />
+        </PressableOpacity>
+        <PressableOpacity style={styles.button} onPress={() => unlockFocus()}>
+          <IonIcon name="settings-outline" color="white" size={12} />
         </PressableOpacity>
       </View>
     </View>
