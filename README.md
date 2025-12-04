@@ -14,14 +14,9 @@ run start
 
 # Building a new release for LightOS
 
-After making changes to the package you'll need to build it for release before it can be imported into LightOS
+We have a script in this repo so that the package builds after being installed - see `scripts/prepare-package.js`.
 
-This theoretically should be as simple as running:
-```
-cd package
-yarn release
-```
-Which should publish the release to our git hub and then you can update the tag in /LightOS/package.json
+After making changes to this repo, update the version in `package.json` and create a new tag - you can then update the tag in /LightOS/package.json
 
 <a href="https://margelo.com">
   <picture>
